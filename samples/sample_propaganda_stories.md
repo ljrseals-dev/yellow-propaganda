@@ -1,3 +1,5 @@
+> **Note (v0.2):** these are v0.1 figurative pieces. Several lines (a hidden "code" white listeners couldn't read, a "covert intelligence operation") are metaphor, not documented history. v0.2 labels that register explicitly and keeps literal claims in THE RECORD.
+
 # Sample Yellow Propaganda Stories  
 *Processed from the Chitlin’ Circuit research package through the music-intelligence + Shakespeare Mystery School lens*
 

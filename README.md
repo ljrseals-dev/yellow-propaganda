@@ -1,48 +1,75 @@
-# Chitlin' Circuit: True Historical and News Connections in the Era of Chitterlings
+# The Yellow Press (v0.2)
 
-## Overview
-This repository compiles research on the **Chitlin' Circuit** (also spelled Chitterling Circuit), a network of performance venues for African American entertainers during the Jim Crow era of racial segregation in the United States (primarily early 20th century through the 1960s). 
+A mythic-tabloid chatbot about the Chitlin' Circuit, its food and its music, built on a **master, model-agnostic prompt**. It runs fully offline with no dependencies, or on any LLM you point it at.
 
-The name derives directly from **chitterlings** (or chitlins), a traditional soul food dish made from pig intestines. Many venues on the circuit served chitlins and other soul food. The term parallels the "Borscht Belt" for Jewish entertainers.
+The idea: the oracular "Yellow Propaganda" voice is compelling, but a voice that blends legend and fact misleads people. So every answer comes in **two registers**:
 
-This collection uses exhaustive web and historical source searching to establish factual connections, prioritizing primary cultural history over any propagandistic framing. No evidence of coordinated "news propaganda" campaigns specifically targeting or inventing the circuit was found; instead, it represents a genuine response to systemic exclusion.
+```
+## THE FRONT PAGE     figurative, mythic, tabloid: the performance
+## THE RECORD         plain, cited, confidence-tagged: [F04, high]
+```
 
-## Key Historical Facts
-- **Origins**: Emerged after the decline of the Theatre Owners Booking Association (TOBA) in the 1930s. Black entrepreneurs, notably brothers Sea and Denver Ferguson of Indianapolis, built a booking agency and network of Black-owned or Black-serving venues.
-- **Purpose**: Provided safe spaces and commercial opportunities for Black musicians, comedians, dancers, and acts when mainstream (white-controlled) venues and travel were restricted by segregation laws and custom.
-- **Cultural Role**: Crucial in the development and popularization of blues, jazz, R&B, and early rock and roll. Performers built fan bases and honed acts here before broader success.
-- **Notable Performers**: James Brown, B.B. King, Ike & Tina Turner, Ray Charles, Bobby Rush ("King of the Chitlin' Circuit"), Candi Staton, Little Milton, and many others. Later generations of comedians (e.g., Bernie Mac) also worked related circuits.
-- **Venues**: Included the Apollo Theater (Harlem), Howard Theatre (Washington, D.C.), Regal Theater (Chicago), and numerous smaller juke joints, clubs, and theaters across the South, Midwest, and North.
-- **Decline**: Desegregation, urban renewal, interstate highways, and changing entertainment industry reduced the need for a segregated circuit by the late 1960s–1970s. A contemporary "southern soul" touring scene continues some traditions.
+The front page may be extravagant but may not introduce literal claims. The record is where facts live, each traceable to a vetted entry in `src/yellowbot/data/knowledge.json`. If the record has nothing on a topic, the bot says so instead of improvising.
 
-## Connection to Chitterlings
-Chitterlings have deep roots in Southern and African American foodways, originating in part from the limited cuts of meat available during slavery and poverty. While historically associated with necessity, they became a cultural marker and delicacy. Venues often served the dish, linking the food name to the performance circuit as a form of cultural reclamation and pride.
+## Quick start
 
-Historical nuance (per culinary historians like Adrian Miller): Whites also ate chitlins; the association with exclusively Black cuisine is overstated in some popular narratives. Enslaved people prepared them for masters as well.
+```bash
+cd yellow-propaganda-chatbot
+pip install -e .            # or just: PYTHONPATH=src python -m yellowbot
+yellowbot                   # offline engine, no key needed
+yellowbot --once "Who were the Ferguson brothers?" --heat 2
+```
 
-## Modern News Connections (as of late 2026)
-- Mississippi Public Broadcasting documentary **"King of the Chitlin’ Circuit"** about blues legend Bobby Rush (born 1933) is being distributed nationwide via American Public Television starting November 23, 2026. It won awards and highlights his 70+ year career rooted in the circuit.
-- Beyoncé referenced the concept in her 2025 "Cowboy Carter and the Rodeo Chitlin' Circuit Tour."
-- Ongoing cultural discussion in Black media, blues scenes, and food history about preservation of the legacy.
+## Use any model
 
-## Research Method
-- Brute-force multi-query web searches across historical encyclopedias (Britannica, Wikipedia), contemporary news (Jackson Advocate, Mississippi Link, American Blues Scene), academic and cultural sources.
-- Cross-referenced etymology, performer interviews, and secondary histories.
-- Focused on verifiable facts over interpretive or activist framing.
+```bash
+export ANTHROPIC_API_KEY=...   && yellowbot --provider anthropic            # default model claude-sonnet-5-5
+export OPENAI_API_KEY=...      && yellowbot --provider openai --model gpt-4o-mini
+yellowbot --provider ollama --model llama3.1                                 # local, no key
+YB_BASE_URL=http://host:8000/v1 YB_MODEL=my-model yellowbot --provider compat # vLLM, llama.cpp, etc.
+```
 
-## Sources
-- Encyclopaedia Britannica entries on Chitlin Circuit and chitlins.
-- Wikipedia (Chitlin Circuit, Chitterlings) – used for overview only; primary claims verified elsewhere.
-- Atlas Obscura / Adrian Miller articles.
-- Jackson Advocate (2026) coverage of Bobby Rush documentary.
-- Interviews and statements from performers such as Candi Staton, Bobby Rush, Lou Rawls (1966 first print citation of the term).
-- Culinary history works referencing soul food and offal traditions.
+Providers: `offline`, `anthropic`, `openai`, `openrouter`, `groq`, `ollama`, `lmstudio`, `compat`. If a backend call fails, the bot says so and answers offline. If a model cites a record ID that does not exist, the CLI warns you.
 
-## Files
-- `chitlin-circuit-research-summary.md`: Detailed notes.
-- This README.
+## Or just paste the prompt
 
-Created as an independent research archive. Feel free to fork, expand with primary documents, or correct any inaccuracies.
+`MASTER_PROMPT.md` is the fully assembled system prompt. It is plain text with no provider syntax, so you can paste it into any chat UI or API as the system message. `/prompt` regenerates it with whatever the current question retrieves. Source pieces live in `src/yellowbot/prompts/`:
 
----
-*Compiled November 22, 2026 using advanced search capabilities.*
+- `master.md`: the truth-seeking core (your original prompt) plus the two-register operating frame
+- `persona_yellow.md`: the voice. Add `persona_*.md` files to make new characters on the same core.
+
+## Commands
+
+| | |
+|---|---|
+| `/mode both\|front\|record` | what you get back |
+| `/heat 1-5` | restrained and wry up to full oracular tabloid |
+| `/story [topic]` | a front-page piece |
+| `/check <claim>` | test a claim you have heard against the record |
+| `/facts [id]` | browse vetted facts and their sources |
+| `more` | new material on the same thread |
+| `/save` `/load` `/export` `/reset` `/status` `/prompt` | session tools |
+
+## Layout
+
+```
+src/yellowbot/
+  bot.py         retrieval -> prompt -> backend -> verification -> memory
+  knowledge.py   fact store + dependency-free retrieval
+  prompts.py     master prompt assembly, citation check
+  providers.py   Anthropic + OpenAI-compatible backends (stdlib only)
+  offline.py     no-model engine with the same two-register contract
+  memory.py      multi-turn state, save/load/export
+  cli.py         REPL
+  data/knowledge.json   21 vetted facts (high/medium/low) + 5 figurative frames
+tests/           27 tests (pytest)
+research/ docs/ samples/   original research archive, style guide, v0.1 samples
+```
+
+## Honest limits
+
+- The knowledge base is only as good as `research/`. Two entries are flagged: **F18** (documentary distribution date) is single-sourced and **F19** (Beyonce tour reference) is unverified. Confirm both before relying on them.
+- The offline engine can retrieve and label, but it cannot judge whether a claim is true. `/check` offline says so. Use a model backend for real comparisons.
+- Retrieval is keyword-based, so unusual phrasing can miss. Tags in `knowledge.json` help.
+
+MIT licensed. *The circuit never died. It only changed key.*

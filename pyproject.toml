@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yellowbot"
+version = "0.2.0"
+description = "Mythic-tabloid chatbot with a cited record. Runs offline or on any LLM."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+yellowbot = "yellowbot.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+yellowbot = ["data/*.json", "prompts/*.md"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
